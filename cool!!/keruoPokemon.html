@@ -1,0 +1,185 @@
+<html><head><base href="https://pokefiltergame.example.com/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>宝可梦筛选器</title>
+<style>
+  body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+  }
+  #game-container {
+    display: flex;
+    height: 100%;
+  }
+  #left-panel {
+    width: 70%;
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  }
+  #right-panel {
+    width: 30%;
+    background-color: #e0e0e0;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  #pokemon-display {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  #pokemon-image {
+    width: 200px;
+    height: 200px;
+  }
+  .button {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+  }
+  .button:hover {
+    background-color: #45a049;
+  }
+  #reject {
+    background-color: #f44336;
+  }
+  #reject:hover {
+    background-color: #da190b;
+  }
+  #rules {
+    background-color: #fff;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+  }
+  #score {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+</style>
+</head>
+<body>
+<div id="game-container">
+  <div id="left-panel">
+    <h1>宝可梦筛选器</h1>
+    <div id="pokemon-display">
+      <img id="pokemon-image" src="" alt="当前宝可梦">
+      <h2 id="pokemon-name"></h2>
+      <p id="pokemon-info"></p>
+    </div>
+    <button id="accept" class="button">接受</button>
+    <button id="reject" class="button">拒绝</button>
+  </div>
+  <div id="right-panel">
+    <div id="rules">
+      <h2>当前规则：</h2>
+      <ul id="rule-list"></ul>
+    </div>
+    <div id="score">得分：<span id="score-value">0</span></div>
+    <div id="day-counter">第 <span id="day-value">1</span> 天</div>
+  </div>
+</div>
+
+<script>
+const pokemonList = [
+  { name: "皮卡丘", type: "电", level: 20, region: "关都" },
+  { name: "妙蛙种子", type: "草", level: 15, region: "关都" },
+  { name: "小火龙", type: "火", level: 18, region: "关都" },
+  { name: "杰尼龟", type: "水", level: 16, region: "关都" },
+  { name: "波加曼", type: "格斗", level: 22, region: "城都" },
+  { name: "火球鼠", type: "火", level: 14, region: "城都" },
+  { name: "菊草叶", type: "草", level: 17, region: "城都" },
+  { name: "小锯鳄", type: "水", level: 19, region: "城都" },
+  { name: "木守宫", type: "草", level: 21, region: "丰缘" },
+  { name: "火稚鸡", type: "火", level: 18, region: "丰缘" }
+];
+
+const rules = [
+  "只接受电系宝可梦",
+  "只接受等级大于15的宝可梦",
+  "只接受来自关都地区的宝可梦",
+  "只接受火系宝可梦",
+  "只接受等级小于20的宝可梦",
+  "只接受来自城都地区的宝可梦"
+];
+
+let currentPokemon;
+let currentRules = [];
+let score = 0;
+let day = 1;
+
+function updateRules() {
+  currentRules = [rules[Math.floor(Math.random() * rules.length)]];
+  const ruleList = document.getElementById("rule-list");
+  ruleList.innerHTML = "";
+  currentRules.forEach(rule => {
+    const li = document.createElement("li");
+    li.textContent = rule;
+    ruleList.appendChild(li);
+  });
+}
+
+function updateScore() {
+  document.getElementById("score-value").textContent = score;
+}
+
+function updateDay() {
+  document.getElementById("day-value").textContent = day;
+}
+
+function getRandomPokemon() {
+  return pokemonList[Math.floor(Math.random() * pokemonList.length)];
+}
+
+function displayPokemon() {
+  currentPokemon = getRandomPokemon();
+  document.getElementById("pokemon-name").textContent = currentPokemon.name;
+  document.getElementById("pokemon-info").textContent = `类型：${currentPokemon.type}，等级：${currentPokemon.level}，地区：${currentPokemon.region}`;
+  document.getElementById("pokemon-image").src = `https://example.com/pokemon/${currentPokemon.name}.png`;
+  document.getElementById("pokemon-image").alt = `${currentPokemon.name} 的图片`;
+}
+
+function checkRules(pokemon) {
+  return currentRules.every(rule => {
+    if (rule.includes("电系")) return pokemon.type === "电";
+    if (rule.includes("火系")) return pokemon.type === "火";
+    if (rule.includes("大于15")) return pokemon.level > 15;
+    if (rule.includes("小于20")) return pokemon.level < 20;
+    if (rule.includes("关都")) return pokemon.region === "关都";
+    if (rule.includes("城都")) return pokemon.region === "城都";
+    return false;
+  });
+}
+
+function handleDecision(accepted) {
+  const correct = checkRules(currentPokemon) === accepted;
+  score += correct ? 1 : -1;
+  updateScore();
+  
+  if (score % 5 === 0) {
+    day++;
+    updateDay();
+    updateRules();
+  }
+  
+  displayPokemon();
+}
+
+document.getElementById("accept").addEventListener("click", () => handleDecision(true));
+document.getElementById("reject").addEventListener("click", () => handleDecision(false));
+
+updateRules();
+updateScore();
+updateDay();
+displayPokemon();
+</script>
+</body></html>

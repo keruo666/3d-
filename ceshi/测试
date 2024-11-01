@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>3D Model Viewer</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MTLLoader.js"></script>
+    <script>
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // 添加光源
+      const ambientLight = new THREE.AmbientLight(0xffffff, 1); // 更亮的环境光
+      scene.add(ambientLight);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1); // 更强的定向光
+      scene.add(directionalLight);
+
+      // 加载材质
+      const mtlLoader = new THREE.MTLLoader();
+      mtlLoader.setPath(""); // 设置为纹理文件所在的目录路径
+      mtlLoader.load("1.mtl", function (materials) {
+        materials.preload();
+
+        // 调整材质属性以减少反光
+        for (let materialName in materials.materials) {
+          let material = materials.materials[materialName];
+          if (material) {
+            material.shininess = 10; // 降低光泽度
+            material.specular.set(0x111111); // 调整反射颜色
+          }
+        }
+
+        // 加载模型并应用材质
+        const objLoader = new THREE.OBJLoader();
+        objLoader.setMaterials(materials);
+        objLoader.setPath(""); // 设置为模型文件所在的目录路径
+        objLoader.load(
+          "1.obj",
+          function (object) {
+            console.log("Model loaded successfully");
+            scene.add(object);
+            object.position.set(0, 0, 0);
+            object.scale.set(0.1, 0.1, 0.1); // 调整模型大小
+            console.log("Scene:", scene);
+          },
+          undefined,
+          function (error) {
+            console.error("An error happened", error);
+          }
+        );
+      });
+
+      // 调整相机位置
+      camera.position.z = 0.5; // 更近距离
+      camera.position.y = 0.5; // 调整高度
+
+      // 添加OrbitControls
+      const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+      function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      animate();
+    </script>
+  </body>
+</html>
